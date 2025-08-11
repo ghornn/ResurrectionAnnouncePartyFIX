@@ -1,5 +1,7 @@
--- Saved options (default to dynamic)
-ra_options = ra_options or { chat = "0" }
+-- cmd.lua
+
+-- Saved options (default to dynamic + debug off)
+ra_options = ra_options or { chat = "0", debug = false }
 
 -- Register slash commands
 SLASH_SAYRES1 = "/sayres"
@@ -9,12 +11,23 @@ SlashCmdList = SlashCmdList or {}
 
 local function trim(s)
   if not s then return "" end
-  return (string.gsub(string.gsub(s, "^%s+", ""), "%s+$", ""))
+  -- Lua 5.0 safe trim
+  s = string.gsub(s, "^%s+", "")
+  s = string.gsub(s, "%s+$", "")
+  return s
+end
+
+local function label_for_chat(v)
+  if v == "0" then return "Dynamic (Raid > Party > Say)" end
+  if v == "1" then return "Raid only" end
+  if v == "2" then return "Say only" end
+  return "Unknown"
 end
 
 SlashCmdList["SAYRES"] = function(msg)
-  -- Normalize input safely
   local input = tostring(msg or "")
+
+  -- split first token + remainder
   local cmd, opt = string.match(input, "^%s*(%S+)%s*(.*)$")
   cmd = cmd and string.lower(cmd) or ""
   opt = trim(opt and string.lower(opt) or "")
@@ -22,50 +35,4 @@ SlashCmdList["SAYRES"] = function(msg)
   local chatformat_cmd  = "|cFFFF8080rA |cffffff55"
   local chatformat_info = "|cFFFF8080rA |cffff0000"
 
-  -- Allow loose formats:
-  --   /sr dynamic | /sr raid | /sr say | /sr 0|1|2
-  --   /sr chat 0  | /sr chat=1 | /sr chat1
-  if cmd == "chat" and opt == "" then
-    opt = string.match(input, "%s[=: ]%s*(%d)") or string.match(input, "chat(%d)") or ""
-  elseif cmd == "dynamic" or cmd == "raid" or cmd == "say"
-      or cmd == "0" or cmd == "1" or cmd == "2" then
-    opt, cmd = cmd, "chat"
-  end
-
-  if cmd == "" or cmd == "help" then
-    DEFAULT_CHAT_FRAME:AddMessage(chatformat_info.."About:|cffffff55 Announces res casts to RAID/PARTY/SAY")
-    DEFAULT_CHAT_FRAME:AddMessage(chatformat_info.."Usage:|cffffff55 /sr chat {0|1|2}  or  /sr {dynamic|raid|say}")
-    DEFAULT_CHAT_FRAME:AddMessage(chatformat_info.."Options:|cffffff55 0=Dynamic (Raid>Party>Say), 1=Raid only, 2=Say only")
-    DEFAULT_CHAT_FRAME:AddMessage(chatformat_info.."Extras:|cffffff55 /sr status")
-    return
-  end
-
-  if cmd == "status" then
-    local label = (ra_options.chat == "0" and "Dynamic")
-               or (ra_options.chat == "1" and "Raid")
-               or (ra_options.chat == "2" and "Say") or "Unknown"
-    DEFAULT_CHAT_FRAME:AddMessage(chatformat_cmd.."Current chat mode: |cffffff55"..label.."|r ("..tostring(ra_options.chat)..")")
-    return
-  end
-
-  if cmd == "chat" then
-    local map = { dynamic = "0", raid = "1", say = "2" }
-    opt = map[opt] or opt
-
-    if opt == "0" then
-      ra_options.chat = "0"
-      DEFAULT_CHAT_FRAME:AddMessage(chatformat_cmd.."Chat Output set to: |cff00ff00DYNAMIC|r")
-    elseif opt == "1" then
-      ra_options.chat = "1"
-      DEFAULT_CHAT_FRAME:AddMessage(chatformat_cmd.."Chat Output set to: |cffff7d00RAID|r")
-    elseif opt == "2" then
-      ra_options.chat = "2"
-      DEFAULT_CHAT_FRAME:AddMessage(chatformat_cmd.."Chat Output set to: |rSAY")
-    else
-      DEFAULT_CHAT_FRAME:AddMessage(chatformat_info.."Unknown Chat Option. Use 0/1/2 or dynamic/raid/say.")
-    end
-    return
-  end
-
-  DEFAULT_CHAT_FRAME:AddMessage(chatformat_info.."Unknown Command. Type |cffffff55/sr help|r")
-end
+  -- Accept loose
