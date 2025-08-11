@@ -1,11 +1,11 @@
 ## Interface: 11200
-## Title: |cFFFF8080R|resurrection |cFFFF8080A|rnnouncement
-## Author: stokbaek
-## Notes: Plugin That Adds Resurrection Announce to Chat
-## Version: 1.1
-## Note: This Plugin needs to either have HealComm or LunaFrames installed to work
+## Title: rA – Resurrection Announcement (Turtle Fixes)
+## Author: stokbaek (Turtle fixes by Ghornn)
+## Notes: Fork of rA that fixes Turtle WoW/1.12 compatibility. Updated HealComm event handling, improved slash commands, added status output, fixed party/raid detection, and expanded target name matching. Requires HealComm or LunaUnitFrames.
+## Version: 1.1-bp1
+## OptionalDeps: HealComm, LunaUnitFrames
 ## SavedVariablesPerCharacter: ra_options
 
-# main
+# Files
 core.lua
 cmd.lua
