@@ -1,4 +1,4 @@
--- Saved options (default to dynamic = 0)
+-- Saved options (default to dynamic)
 ra_options = ra_options or { chat = "0" }
 
 -- Register slash commands
@@ -6,26 +6,29 @@ SLASH_SAYRES1 = "/sayres"
 SLASH_SAYRES2 = "/sr"
 
 SlashCmdList = SlashCmdList or {}
-SlashCmdList["SAYRES"] = function(msg)
-  local function trim(s) return (s and s:gsub("^%s+",""):gsub("%s+$","")) or "" end
 
-  local raw = msg or ""
-  local cmd, opt = raw:match("^%s*(%S+)%s*(.*)$")
-  cmd = (cmd and cmd:lower()) or ""
-  opt = trim((opt and opt:lower()) or "")
+local function trim(s)
+  if not s then return "" end
+  return (string.gsub(string.gsub(s, "^%s+", ""), "%s+$", ""))
+end
+
+SlashCmdList["SAYRES"] = function(msg)
+  -- Normalize input safely
+  local input = tostring(msg or "")
+  local cmd, opt = string.match(input, "^%s*(%S+)%s*(.*)$")
+  cmd = cmd and string.lower(cmd) or ""
+  opt = trim(opt and string.lower(opt) or "")
 
   local chatformat_cmd  = "|cFFFF8080rA |cffffff55"
   local chatformat_info = "|cFFFF8080rA |cffff0000"
 
   -- Allow loose formats:
-  --  /sr dynamic  -> chat 0
-  --  /sr raid     -> chat 1
-  --  /sr say      -> chat 2
-  --  /sr chat 0   / /sr chat=1 / /sr chat1 etc.
+  --   /sr dynamic | /sr raid | /sr say | /sr 0|1|2
+  --   /sr chat 0  | /sr chat=1 | /sr chat1
   if cmd == "chat" and opt == "" then
-    opt = raw:match("%s[=: ]%s*(%d)") or raw:match("chat(%d)") or ""
+    opt = string.match(input, "%s[=: ]%s*(%d)") or string.match(input, "chat(%d)") or ""
   elseif cmd == "dynamic" or cmd == "raid" or cmd == "say"
-     or cmd == "0" or cmd == "1" or cmd == "2" then
+      or cmd == "0" or cmd == "1" or cmd == "2" then
     opt, cmd = cmd, "chat"
   end
 
@@ -47,7 +50,7 @@ SlashCmdList["SAYRES"] = function(msg)
 
   if cmd == "chat" then
     local map = { dynamic = "0", raid = "1", say = "2" }
-    opt = map[opt] or opt  -- keep numeric if passed
+    opt = map[opt] or opt
 
     if opt == "0" then
       ra_options.chat = "0"
